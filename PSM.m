@@ -53,6 +53,7 @@ classdef PSM < handle
             psm.V = V;
         end
     end
+    
     methods
         function obj = PSM(numCuts,minD,maxD,numDims, V)
             obj.cp = linspace(minD,maxD,numCuts);
@@ -75,7 +76,6 @@ classdef PSM < handle
             effortTarget = obj.effortTarget;
             KETarget = obj.KETarget;
             numDims = obj.numDims;
-            %             numDemos = obj.numDemos;
             numCuts = obj.numCuts;
             V = obj.V;
             save(name,'W','cp','posTarget','dirTarget',...
@@ -117,8 +117,7 @@ classdef PSM < handle
             if  cut+1 <= cut2
                 ci = 0*0.00001+(.5*(qdhat1Next^2-qdhat1^2)-.5*(obj.cp(cut+1)^2-qPrime(1)^2)*ki)/(obj.cp(cut+1)-qPrime(1));
             else
-                ci = 0*0.00001+(.5*(qdhat1Next^2-qdhat1^2)-.5*(obj.qPrime1f(1)^2-qPrime(1)^2)*ki)/(obj.qPrime1f(1)-qPrime(1));
-                
+                ci = 0*0.00001+(.5*(qdhat1Next^2-qdhat1^2)-.5*(obj.qPrime1f(1)^2-qPrime(1)^2)*ki)/(obj.qPrime1f(1)-qPrime(1));   
             end
             qddhat1 = ki*qPrime(1)+ci;
             qddhat = zeros(obj.numDims,1);
@@ -130,7 +129,6 @@ classdef PSM < handle
             dd1 = zeros(obj.numDims,1);
             for i = 2:length(qddhat)
                 coefs = obj.A(cut,:,i-1);
-                
                 for d = 1:length(coefs)
                     d0(i) = d0(i)+coefs(d)*qPrime(1)^(d-1);
                 end
@@ -209,7 +207,6 @@ classdef PSM < handle
                 qdPrimei = QdPrimei(:,d);
                 qdPrimef = QdPrimef(:,d);
                 for cut = 1:obj.numCuts-1
-                    
                     if BasisObjFnc.getJ(obj.cp,qPrimei{1}) == cut
                         m = obj.KineticEnergy(cut, 1);
                         g = @(qPrime) qPrime*0;
@@ -257,10 +254,8 @@ classdef PSM < handle
                                 g = @(qPrime) qPrime*0+val;
                                 m = obj.Direction(cut, dim);
                                 obj.addBoundaryConstraint(m, g, qPrimef{1},d)
-                            end
-                            
-                        end
-                        
+                            end    
+                        end   
                     end
                 end
             end
@@ -371,14 +366,13 @@ classdef PSM < handle
                             bofP.addConstraint2(m1, m2, obj.cp(cut))
                             m1 = obj.Curvature(cut-1, dim);
                             m2 = obj.Curvature(cut, dim);
-                             bofP.addConstraint2(m1, m2, obj.cp(cut))
+                            bofP.addConstraint2(m1, m2, obj.cp(cut))
                         end
                     end
                 end
             end
         end
-        
-        
+              
         function setupBasisFncsE(obj, posTarget, dirTarget, curvTarget, effortTarget, KETarget, T, Demos)
             % setup basis functions for expert
             obj.numDemos = length(Demos);
@@ -401,8 +395,7 @@ classdef PSM < handle
                             gk = obj.KineticEnergyE(t,demo,cut, 1);
                             bofKE = obj.addBOFE(gk,vk, qPrimei,qPrimef,['KE' ': ' num2str(KETarget(target))],d);
                         end
-                    end
-                    
+                    end 
                     for dim = 2:obj.numDims
                         for target = 1:2
                             % position
@@ -453,7 +446,6 @@ classdef PSM < handle
                 obj.Ain{d} = Aind;
                 obj.bin{d} = bind;
             end
-            
             for d = 1:size(obj.BOFsE,2)
                 bofsE = obj.BOFsE(:,d);
                 for i = 1:length(bofsE)
@@ -494,11 +486,11 @@ classdef PSM < handle
             obj.k = zeros(obj.numCuts-1, 1);
             obj.c = zeros(obj.numCuts-1, 1);
             Af = reshape(obj.A, [], 1);
-            x = obj.parameters;  %[k;c;Af];
+            x = obj.parameters;  % [k;c;Af];
             obj.k = x(1:length(obj.k),1);
             obj.c = x((1:length(obj.c))+length(obj.k),1);
             obj.A = reshape(x(length(obj.k)+length(obj.c)+1:end,1), obj.numCuts-1, obj.polyDegree, obj.numDims-1);
-        end   
+        end
         
         function e = evaluate(obj,Plot)
             eJ = [];
@@ -542,27 +534,11 @@ classdef PSM < handle
                     dcET = dcET+ dcE;
                     eJ = [eJ; J];
                     eC = [eC;obj.W(Wind)*bofE.c];
-%                     tmp  = obj.W(Wind)*bofE.c;
-%                     qPrime = sort([obj.cp(2:end-1) bof.qPrime1i bof.qPrime1f]);
-%                     qPrime = sort([qPrime qPrime-0.0000001]);
-%                     tmp = repmat(tmp,1,length(qPrime));
-%                     tmp2 = repmat(J,1,length(qPrime));
-%                     bool = (bof.v(qPrime') ~= 0);
-%                     xVals = [xVals qPrime(bool)];
-%                     yVals = [yVals tmp(bool)];
-%                     yVals2 = [yVals2 tmp2(bool)];
                 end
                 if exist('Plot') == 1
-%                     if isempty(yValsOld) || 1
-plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
-                     plot(qPrime1, dJT,'Color','b','LineWidth',2)
-%                     plot(xVals,yVals2*0+yVals ,'Color','k','LineWidth',2) % my score minus expert
-%                     plot(xVals,yVals2-yVals*0 ,'Color','b','LineWidth',2) % my score minus expert
-%                     else
-%                         plot(xVals, (yVals2+yVals2Old) -(yVals+yValsOld ) ,'Color','b','LineWidth',2) % my score minus expert
-%                         plot(xVals, ,'Color','k','LineWidth',2) % my score minus expert
-%                     end
-                    ylabel('$$\sum_{i} w_i{b}^2_i $$','Interpreter','latex','FontSize',16)
+                    plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
+                    plot(qPrime1, dJT,'Color','b','LineWidth',2)
+                    ylabel('$$\sum_{i} w_i \frac{d}{dq''_1}J_i^{be}$$','Interpreter','latex','FontSize',16)
                     xlabel('$$q''_1 $$','Interpreter','latex','FontSize',16)
                     axis tight
                     set(gcf,'Color','w')
@@ -572,57 +548,6 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
         end
         
         function optimize(obj)
-            alpha = 0.0001;
-            val = -99;
-            valold  = -999;
-            gradT = ones(length(obj.BOFs(:,1)),1);
-            iter = 0;
-            close all
-            while abs(val-valold)/alpha > .5
-                iter = iter+1;
-                if mod(iter,20)==0
-                    plot(obj.W);hold on
-                    pause(0.00000000000001)
-                end
-                gradT = gradT*0;
-                (val-valold)/alpha
-                %                 val
-                valold = val;
-                obj.optimizePSM();
-                val = 0;
-                wOld = obj.W;
-                for d = 1:size(obj.BOFs,2)
-                    bofs = obj.BOFs(:,d);
-                    bofsE = obj.BOFsE(:,d);
-                    grad = zeros(length(bofs),1);
-                    for i = 1:length(bofs)
-                        bof = bofs{i};
-                        Hi = bof.H;
-                        fi = bof.f;
-                        ci = bof.c;
-                        x = obj.parameters(:,d);
-                        J = x'*Hi*x+fi'*x+ci;
-                        c = bofsE{i}.c;
-                        grad(i) = J-c;
-                        val = val+wOld(i)*J-wOld(i)*c;
-                        obj.W(i) = obj.W(i)+alpha*(grad(i));
-                        if obj.W(i) <= 0.0000001
-                            obj.W(i) = 0.0000001;
-                        elseif obj.W(i) > 1
-                            obj.W(i) = 1;
-                            %                             gradT(i) = gradT(i)+grad(i);
-                        end
-                    end
-                    %                     val = val+max(abs(grad));%norm(grad);
-                    
-                end
-                %                 obj.W = obj.W./norm(obj.W);
-                %                 val = norm(grad);
-            end
-            %              obj.W = obj.W./sum(obj.W);
-        end
-        
-        function optimize2(obj)
             options = optimoptions('fmincon','SpecifyObjectiveGradient',true,'MaxFunctionEvaluations',3E4);
             obj.W = fmincon(@(w) obj.objective(w),obj.W,[],[],[],[],obj.W*0,obj.W*0+1, [], options); %@(w) cont(w)
             obj.objective(obj.W)
@@ -654,24 +579,16 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             val = -val
         end
         
-        
-        
-        
         function bof = addBOF(obj, m, v, qPrime1i, qPrime1f, type, d)
             bof = BasisObjFnc(obj.cp, m, v);
             bof.qPrime1i = qPrime1i;
             bof.qPrime1f = qPrime1f;
-            %             bof.build();
             bof.type = type;
             if size(obj.BOFs,2) < d
                 obj.bofCounter = 0;
-                %                 obj.BOFs{1,d} = bof;
-                %             else
             end
             obj.bofCounter = obj.bofCounter+1;
-            %                 obj.bofCounter = obj.bofCounter+1;
             obj.BOFs{obj.bofCounter, d} = bof;
-            %             end
             if ~obj.typeMap.isKey(bof.type)
                 obj.typeMap(bof.type) = {{}};
             end
@@ -681,13 +598,11 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             else
                 cells{d}{length(cells{d})+1} = bof;
             end
-            %             cells{length(cells)+1,d} = bof;
             obj.typeMap(bof.type) = cells;
             if d == 1
                 obj.W = [obj.W;1];
                 bof.Wind = length(obj.W);
-            end
-            
+            end 
         end
         
         function bofE = addBOFE(obj, g, v, qPrime1i, qPrime1f, type, d)
@@ -756,8 +671,6 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
         
         function g = DirectionE(obj, t, demo, cut, dim)
             [demo, demod, demodd] = obj.preBasisE(t,demo);
-            %             Vi = demod(dim,:)./demod(1,:);
-            %             g = @(qPrime1) interp1(demo(1,:),Vi, qPrime1,'pchip','extrap');
             d = linspace(demo(1,1),demo(1,end),200);
             D = interp1(demo(1,:), demo(dim,:), d,'makima','extrap');
             dD = d(2) - d(1);
@@ -765,6 +678,7 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             g = @(qPrime1) interp1(d,Dd, qPrime1,'linear','extrap');
             g = BasisFncE(obj.cp, g, cut);
         end
+        
         function g = CurvatureE(obj, t, demo, cut, dim)
             [demo, demod, demodd] = obj.preBasisE(t,demo);
             d = linspace(demo(1,1),demo(1,end),200);
@@ -772,9 +686,6 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             dD = d(2) - d(1);
             Dd = d_dt(D,dD);
             Ddd = d_dt(Dd,dD);
-            %             V1 = demod(dim,:)./demod(1,:);
-            %             V = (demodd(dim,:)-V1.*demodd(1,:) )./(demod(1,:).^2);
-            %             g = @(qPrime1) interp1(demo(1,:),V, qPrime1,'linear','extrap');
             g = @(qPrime1) interp1(d,Ddd, qPrime1,'pchip','extrap');
             g = BasisFncE(obj.cp, g, cut);
         end
@@ -801,19 +712,15 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             end
             for i =1:length(m)
                 val = obj.mCombine(mAll,i,cut);
-                %                 if ~isnumeric(val)
                 m{i} = val;
-                %                 else
-                %                     m{i} = 0;
-                %                 end
             end
         end
+        
         function f = mCombine(obj, mAll,i,cut)
             f = 0;
             for j = 1:length(mAll)
                 mj = mAll{j}{1};
                 mji = mj{i};
-                
                 if ~isnumeric(mji)
                     if j < cut
                         mji = @(qPrime1) qPrime1*0+mji(obj.cp(j+1)-0.000001).*(qPrime1 > obj.cp(cut) ).*(qPrime1 < obj.cp(cut+1) );
@@ -822,11 +729,11 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
                         f = @(qPrime1) mji(qPrime1);
                     else
                         f = @(qPrime1) f(qPrime1)+mji(qPrime1);
-                    end
-                    
+                    end   
                 end
             end
         end
+        
         function m = Position(obj, cut, dim)
             [A,k,c, functionsM] = obj.preBasis();
             for i = 1 : obj.polyDegree
@@ -835,6 +742,7 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             end
             m = obj.postBasis(cut,A,k,c,functionsM);
         end
+        
         function m = Direction(obj, cut, dim)
             [A,k,c, functionsM] = obj.preBasis();
             for i = 1 : obj.polyDegree
@@ -843,6 +751,7 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
             end
             m = obj.postBasis(cut,A,k,c,functionsM);
         end
+        
         function m = Curvature(obj, cut, dim)
             [A,k,c, functionsM] = obj.preBasis();
             for i = 1 : obj.polyDegree
@@ -862,7 +771,6 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
                     figure(tmp)
                     subplot(1,2,1)
                     bofsE = obj.typeMap(types{t});
-                    
                     for i = 1:length(bofsE)
                         valv = 0;
                         g = bofsE{i}.g;
@@ -883,8 +791,7 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
                                 if ~isnumeric(m{j})
                                     fj = m{j};
                                     valf = valf+fj(qPrime1)*x(j);
-                                end
-                                
+                                end  
                             end
                             bool = (bofd{1}.qPrime1i <= qPrime1) & (qPrime1 <=  bofd{1}.qPrime1f);
                             plot(qPrime1(valf~=0 & bool),valf(valf~=0 & bool),'LineWidth',2,'Color','b');hold on
@@ -897,7 +804,6 @@ plot(qPrime1, dcET,'Color','k','LineWidth',2);hold on
                 end
             end
         end
-        
     end
 end
 

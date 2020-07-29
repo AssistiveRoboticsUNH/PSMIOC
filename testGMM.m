@@ -1,6 +1,7 @@
+%% train models
 clear all
 close all
-addpath GMM-GMR-v2.0\
+addpath GMM-GMR-DMP\
 for e = 1:4
     X = [];
     close all
@@ -20,18 +21,18 @@ for e = 1:4
     [Priors, Mu, Sigma] = EM(Data, Priors, Mu, Sigma);
     expData(1,:) = linspace(min(Data(1,:)), max(Data(1,:)), 200); % expected distribution
     [expData(2:nbVar,:), expSigma] = GMR(Priors, Mu, Sigma,  expData(1,:), [1], [2:nbVar]);
-    save(['expData_' num2str(e)],'expData')
-    save(['expSigma_' num2str(e)],'expSigma')
+    save(['models/expData_' num2str(e)],'expData')
+    save(['models/expSigma_' num2str(e)],'expSigma')
 end
-%%
+%% Experiment 2: patient evaluation
 close all
 plot(expData(1,:),expData(2:5,:)','LineWidth',2);hold on
 plot(X(1,:),X(2:end,:)','Color','k') % plot data and GMM result
 expdt = (expData(1,end) - expData(1,1))/length(expData(1,:));
 table = zeros(4,8,3);
 for e = 1:4
-    load(['expData_' num2str(e)])
-    load(['expSigma_' num2str(e)],'expSigma')
+    load(['models/expData_' num2str(e)])
+    load(['models/expSigma_' num2str(e)],'expSigma')
     for j = [0 4]
         errorTot = 0;
         for i = 4:6

@@ -1,10 +1,10 @@
 function [t,D,Dd, Ddd,DPrime,DdPrime,DddPrime, dt,V] = loadData(e,r,Vin)
-% e 1-4 corresponds to correct exercises and 5-8 corresponds to incorrect exercises
+% e 1-4 corresponds to correct exercises and 5-8 corresponds to incorrect
+% exercises. Pre-processing steps occur in this function.
 offset = 0;
 if (e==4 || e==8)
     offset = 2;
 end
-
 if e<=4
     load(['data/TPR Therapist Weights000' num2str(e+offset) 'Q.mat'])
 else
@@ -34,7 +34,6 @@ D = newData(:,:,r);
 D = D(:,10:floor(1/2*dataLength));
 D1 = newData(:,:,1);
 D1 = D1(:,10:floor(1/2*dataLength));
-% allData = newData(:, 1:dataLength/2,:);
 if exist('Vin') ~= 1
     V = getV(D1-D1(:,end));%; % this is the eigenvector matrix for a signle demonstration
 else
@@ -46,7 +45,6 @@ n = length(t);
 h = .06;
 for i = 1:size(DPrime,1)
     ri = ksr(t,DPrime(i,:),h,n);
-%     DPrime(i,:) = ri.f;% smooth(DPrime(i,:),.2); % smooth data
 end
 D = V*DPrime;
 Dd = 0*D;
@@ -85,7 +83,6 @@ Dd = Dd(:,tmp);
 Ddd = Ddd(:,tmp);
 t = t(:,tmp);
 t = t-t(1);
-
 n = length(t);
 h = .05;
 ri = ksr(t,DPrime(1,:),h,n);
@@ -103,7 +100,7 @@ D = V*DPrime;
 Dd = V*DdPrime;
 Ddd = V*DddPrime;
 offset = floor(size(DdPrime,2)/2);
-% crop motion once velocity falls below a threshold
+% crop motion again once velocity falls below a threshold
 ind2 = offset+find( (.5*DdPrime(1,offset:end).^2) < 0.1,1)-1;
 ind1 = find(.5*DdPrime(1,1:end).^2 > 0.1,1);
 if isempty(ind1)

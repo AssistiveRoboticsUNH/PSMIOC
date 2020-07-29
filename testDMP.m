@@ -1,9 +1,9 @@
+%% train models
 clear all
-addpath GMM-GMR-v2.0\
-b = 10;
-nbStates = 20;
+addpath GMM-GMR-DMP\
+b = 15;
+nbStates = 10;
 nbVar = 2;
-%% learn trajectories
 for d = 1:4
     for e = 3
         X = [];
@@ -23,14 +23,14 @@ for d = 1:4
         [expData(2:nbVar,:), expSigma] = GMR(Priors, Mu, Sigma,  expData(1,:), [1], [2:nbVar]);
         plot(expData(1,:),expData(2,:),'Color','k')
         expDMP = expData(1:2,:);
-        save(['expDMP_' num2str(e) '_' num2str(d)],'expDMP')
+        save(['models/expDMP_' num2str(e) '_' num2str(d)],'expDMP')
     end
 end
-%% test
+%% Experiment 1: exercise reproduction
 for e = 3
     figure(e)
         for d = 1:4
-            load(['expDMP_' num2str(e) '_' num2str(d)],'expDMP')
+            load(['models/expDMP_' num2str(e) '_' num2str(d)],'expDMP')
             for q = 1:3
                 [t,D,Dd, Ddd,Dprime,Ddprime,Dddprime, dt,V]  = loadData(e,q);
                 goal = D(:,end);
